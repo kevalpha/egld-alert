@@ -1,0 +1,6 @@
+yfinance
+prophet
+python-telegram-bot
+pandas
+numpy
+matplotlib
