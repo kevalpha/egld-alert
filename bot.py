@@ -1,31 +1,29 @@
 import yfinance as yf
-import pandas as pd
 from prophet import Prophet
-from telegram import Bot
-import time
+import telegram
 import os
+import time
 
-# Configurare variabile din mediu
+INTERVAL_VERIFICARE = 3600  # verifică la fiecare oră
+
 TOKEN = os.environ['TOKEN']
 CHAT_ID = os.environ['CHAT_ID']
-INTERVAL_VERIFICARE = 86400  # o dată pe zi
-
-bot = Bot(token=TOKEN)
+bot = telegram.Bot(token=TOKEN)
 
 cripto_monede = {
-    'EGLD': 'EGLD-USD',
-    'PEPE': 'PEPE-USD',
-    'FLOKI': 'FLOKI-USD',
-    'BONK': 'BONK-USD'
+    "EGLD": "EGLD-USD",
+    "PEPE": "PEPE-USD",
+    "FLOKI": "FLOKI-USD",
+    "BONK": "BONK-USD"
 }
 
 def trimite_alerta(mesaj):
     bot.send_message(chat_id=CHAT_ID, text=mesaj)
 
-def prezice_si_avertizeaza(nume, simbol):
+def prezice_si_anunță(nume, simbol):
     try:
-        df = yf.download(simbol, period="180d")[['Close']].reset_index()
-        df.rename(columns={'Date': 'ds', 'Close': 'y'}, inplace=True)
+        df = yf.download(simbol, period="180d")
+        df = df.rename(columns={"Date": "ds", "Close": "y"})
 
         if df.empty or len(df) < 30:
             print(f"Date insuficiente pentru {nume}")
@@ -34,24 +32,21 @@ def prezice_si_avertizeaza(nume, simbol):
         model = Prophet(daily_seasonality=True)
         model.fit(df)
 
-        future = model.make_future_dataframe(periods=30)
-        forecast = model.predict(future)
+        viitor = model.make_future_dataframe(periods=1)
+        prognoza = model.predict(viitor)
 
-        pret_actual = df['y'].iloc[-1]
-        pret_viitor = forecast['yhat'].iloc[-1]
+        pret_actual = df["y"].iloc[-1]
+        pret_viitor = prognoza["yhat"].iloc[-1]
         variatie = ((pret_viitor - pret_actual) / pret_actual) * 100
 
         if abs(variatie) >= 30:
             directie = "CRESCUT" if variatie > 0 else "SCĂZUT"
-            mesaj = (f"[AI ALERTĂ] {nume} ({simbol}) ar putea {directie} "
-                     f"cu {variatie:.2f}% în următoarele 30 zile!")
+            mesaj = f"[ALERTĂ AI] {nume} ({simbol}) a {directie} cu {variatie:.2f}% în următoarele ore."
             trimite_alerta(mesaj)
 
     except Exception as e:
         print(f"Eroare la {nume}: {e}")
 
-# Rulare zilnică
-while True:
-    for nume, simbol in cripto_monede.items():
-        prezice_si_avertizeaza(nume, simbol)
-    time.sleep(INTERVAL_VERIFICARE)
+def main():
+    while True:
+        for nume,

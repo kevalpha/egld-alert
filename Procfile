@@ -1,1 +1,2 @@
-worker: python bot.py
+# TODO: Modify this Procfile to fit your needs
+web: gunicorn app:app
