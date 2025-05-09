@@ -1,0 +1,6 @@
+yfinance
+pandas
+fbprophet
+schedule
+smtplib
+email
